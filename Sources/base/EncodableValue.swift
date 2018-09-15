@@ -8,6 +8,15 @@
 
 import Foundation
 
+
+public enum JWTKey: String, CodingKey {
+    case device = "dvc"
+    case admin = "admin"
+    case beta = "beta"
+    case sandbox = "sandbox"
+}
+
+
 public struct EncodableValue: Codable {
     public let value: Encodable
 
@@ -30,6 +39,40 @@ public struct EncodableValue: Codable {
         } else if let stringVal = try? container.decode(String.self) {
             value = stringVal
         } else {
+            // it could be an array
+            if var multiContainer = try? decoder.unkeyedContainer() {
+                var items: [Codable] = []
+                while !multiContainer.isAtEnd {
+                    if let intVal = try? multiContainer.decodeIfPresent(Int.self) {
+                        items.append(intVal)
+                    } else if let doubleVal = try? multiContainer.decodeIfPresent(Double.self) {
+                        items.append(doubleVal)
+                    } else if let boolVal = try? multiContainer.decodeIfPresent(Bool.self) {
+                        items.append(boolVal)
+                    } else if let stringVal = try? multiContainer.decodeIfPresent(String.self) {
+                        items.append(stringVal)
+                    } else {
+                        throw DecodingError.dataCorruptedError(
+                            in: multiContainer,
+                            debugDescription: "unable to type-identify array members")
+                    }
+                }
+            } else if let keyedContainer = try? decoder.container(keyedBy: JWTKey.self) {
+                var keyedItems: [JWTKey: Any] = [:]
+                if let admin = try? keyedContainer.decode(Bool.self, forKey: .admin) {
+                    keyedItems[.admin] = admin
+                } else if let beta = try? keyedContainer.decode(Bool.self, forKey: .beta) {
+                    keyedItems[.beta] = beta
+                } else if let sandbox = try? keyedContainer.decode(Bool.self, forKey: .sandbox) {
+                    keyedItems[.sandbox] = sandbox
+                } else if let device = try? keyedContainer.decode(String.self, forKey: .device) {
+                    keyedItems[.device] = device
+                } else {
+                    throw DecodingError.dataCorruptedError(
+                        in: container,
+                        debugDescription: "unable to identify property in JWT claims payload")
+                }
+            }
             throw DecodingError.dataCorruptedError(in: container, debugDescription: "the container contains nothing to serialize")
         }
     }
