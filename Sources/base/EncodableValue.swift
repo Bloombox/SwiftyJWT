@@ -18,7 +18,7 @@ public enum JWTKey: String, CodingKey {
 
 
 public struct EncodableValue: Codable {
-    public let value: Encodable
+    public let value: Encodable!
 
     public func encode(to encoder: Encoder) throws {
         try value.encode(to: encoder)
@@ -57,6 +57,7 @@ public struct EncodableValue: Codable {
                             debugDescription: "unable to type-identify array members")
                     }
                 }
+                value = nil  // TODO wtf
             } else if let keyedContainer = try? decoder.container(keyedBy: JWTKey.self) {
                 var keyedItems: [JWTKey: Any] = [:]
                 if let admin = try? keyedContainer.decode(Bool.self, forKey: .admin) {
@@ -72,6 +73,7 @@ public struct EncodableValue: Codable {
                         in: container,
                         debugDescription: "unable to identify property in JWT claims payload")
                 }
+                value = nil  // TODO wtf
             } else {
                 throw DecodingError.dataCorruptedError(in: container, debugDescription: "the container contains nothing to serialize")
             }
