@@ -72,8 +72,9 @@ public struct EncodableValue: Codable {
                         in: container,
                         debugDescription: "unable to identify property in JWT claims payload")
                 }
+            } else {
+                throw DecodingError.dataCorruptedError(in: container, debugDescription: "the container contains nothing to serialize")
             }
-            throw DecodingError.dataCorruptedError(in: container, debugDescription: "the container contains nothing to serialize")
         }
     }
 }
