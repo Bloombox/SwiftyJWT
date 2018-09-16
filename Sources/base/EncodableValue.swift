@@ -14,6 +14,24 @@ public enum JWTKey: String, CodingKey {
     case admin = "admin"
     case beta = "beta"
     case sandbox = "sandbox"
+    case avatar = "avatar_url"
+    case nonce = "nce"
+    case userId = "prn"
+
+    static let all: [JWTKey] = [
+        .device, .admin, .beta, .sandbox, .avatar, .nonce, .userId]
+
+    var type: Decodable.Type {
+        switch self {
+        case .device: return String.self
+        case .admin: return Bool.self
+        case .beta: return Bool.self
+        case .sandbox: return Bool.self
+        case .avatar: return String.self
+        case .nonce: return String.self
+        case .userId: return String.self
+        }
+    }
 }
 
 
@@ -58,21 +76,7 @@ public struct EncodableValue: Codable {
                     }
                 }
                 value = nil  // TODO wtf
-            } else if let keyedContainer = try? decoder.container(keyedBy: JWTKey.self) {
-                var keyedItems: [JWTKey: Any] = [:]
-                if let admin = try? keyedContainer.decode(Bool.self, forKey: .admin) {
-                    keyedItems[.admin] = admin
-                } else if let beta = try? keyedContainer.decode(Bool.self, forKey: .beta) {
-                    keyedItems[.beta] = beta
-                } else if let sandbox = try? keyedContainer.decode(Bool.self, forKey: .sandbox) {
-                    keyedItems[.sandbox] = sandbox
-                } else if let device = try? keyedContainer.decode(String.self, forKey: .device) {
-                    keyedItems[.device] = device
-                } else {
-                    throw DecodingError.dataCorruptedError(
-                        in: container,
-                        debugDescription: "unable to identify property in JWT claims payload")
-                }
+            } else if let _ = try? decoder.container(keyedBy: JWTKey.self) {
                 value = nil  // TODO wtf
             } else {
                 throw DecodingError.dataCorruptedError(in: container, debugDescription: "the container contains nothing to serialize")
